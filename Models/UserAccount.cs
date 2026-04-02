@@ -15,4 +15,9 @@ public class UserAccount
     public string? GoogleId { get; set; }
     public DateTime JoinDate { get; set; } = DateTime.UtcNow;
     public AccountStatus Status { get; set; } = AccountStatus.Active;
+    
+    // Onboarding preferences
+    public string? AgeGroup { get; set; }
+    public int CycleLength { get; set; } = 28;
+    public int PeriodLength { get; set; } = 5;
 }

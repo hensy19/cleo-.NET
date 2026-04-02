@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using cleo.Data;
 
@@ -10,9 +11,11 @@ using cleo.Data;
 namespace cleo.Migrations
 {
     [DbContext(typeof(CleoDbContext))]
-    partial class CleoDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260402160336_AddOnboardingFields")]
+    partial class AddOnboardingFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.25");

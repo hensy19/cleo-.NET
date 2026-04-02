@@ -35,16 +35,23 @@ public class DashboardController : Controller
             .OrderByDescending(c => c.StartDate)
             .FirstOrDefaultAsync();
 
+        // Ensure user goes through onboarding if they haven't set their profiling info
+        if (string.IsNullOrEmpty(user?.AgeGroup) || lastCycle == null)
+        {
+            return RedirectToAction("Onboarding", "Public");
+        }
+
         if (lastCycle != null)
         {
             var diff = (DateTime.UtcNow - lastCycle.StartDate).Days + 1;
-            ViewBag.CycleDay = diff > 0 && diff <= 35 ? diff : 1;
+            ViewBag.CycleDay = diff > 0 && diff <= user.CycleLength ? diff : 1;
             
-            var nextDate = lastCycle.StartDate.AddDays(28);
+            var nextDate = lastCycle.StartDate.AddDays(user.CycleLength);
             ViewBag.NextPeriodDate = nextDate.ToString("MMM dd, yyyy");
             ViewBag.DaysUntilNextPeriod = (nextDate - DateTime.UtcNow).Days;
             
-            var ovulationDate = lastCycle.StartDate.AddDays(14);
+            // Typical ovulation is ~14 days before next period
+            var ovulationDate = nextDate.AddDays(-14);
             ViewBag.OvulationDay = ovulationDate.ToString("MMM dd, yyyy");
             ViewBag.OvulationDaysUntil = (ovulationDate - DateTime.UtcNow).Days;
         }
@@ -57,8 +64,8 @@ public class DashboardController : Controller
             ViewBag.OvulationDaysUntil = 0;
         }
 
-        ViewBag.CycleLength = 28;
-        ViewBag.PeriodLength = 5;
+        ViewBag.CycleLength = user.CycleLength;
+        ViewBag.PeriodLength = user.PeriodLength;
 
         // Real symptoms/mood
         ViewBag.Symptoms = await _db.SymptomLogs.Where(s => s.UserId == userId).Take(3).Select(s => s.Symptoms).ToListAsync();
@@ -267,9 +274,9 @@ public class DashboardController : Controller
         {
             user.Name,
             user.Email,
-            Age = 19,
-            CycleLength = 28,
-            PeriodLength = 5,
+            AgeGroup = user.AgeGroup ?? "Not set",
+            CycleLength = user.CycleLength,
+            PeriodLength = user.PeriodLength,
             JoinDate = user.JoinDate.ToString("MMM yyyy"),
             TotalCycles = await _db.CycleTracks.CountAsync(c => c.UserId == userId),
             TotalMoods = await _db.MoodNotes.CountAsync(m => m.UserId == userId)

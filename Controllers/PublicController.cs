@@ -77,13 +77,33 @@ public class PublicController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Route("onboarding")]
-    public IActionResult Onboarding(int age)
+    public async Task<IActionResult> Onboarding(string ageGroup, string lastPeriodDate, int cycleLength)
     {
-        // Simple mock of detail capture. Actual UserId can be used from Session
         var userId = HttpContext.Session.GetInt32("UserId");
         if (userId == null) return RedirectToAction(nameof(Login));
 
-        // Further onboarding logic could be added here to update user profile
+        var user = await _db.Users.FindAsync(userId.Value);
+        if (user != null)
+        {
+            user.AgeGroup = ageGroup;
+            user.CycleLength = cycleLength > 0 ? cycleLength : 28;
+            await _db.SaveChangesAsync();
+
+            if (DateTime.TryParse(lastPeriodDate, out var start))
+            {
+                // Clear existing predictions to avoid duplicates if onboarding re-run
+                var existingCycles = _db.CycleTracks.Where(c => c.UserId == userId.Value);
+                _db.CycleTracks.RemoveRange(existingCycles);
+                
+                _db.CycleTracks.Add(new CycleTrack 
+                { 
+                    UserId = userId.Value, 
+                    StartDate = start 
+                });
+                await _db.SaveChangesAsync();
+            }
+        }
+        
         return RedirectToAction("Index", "Dashboard");
     }
 

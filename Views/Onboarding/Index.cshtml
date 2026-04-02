@@ -1,42 +1,153 @@
 @{
     ViewData["Title"] = "Onboarding";
+    Layout = null;
 }
-@section Styles {
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - CLEO</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/variables.css" />
+    <link rel="stylesheet" href="~/css/global.css" />
     <link rel="stylesheet" href="~/css/Onboarding.css" />
-}
-<div class="onboarding-page">
-    <div class="log-card onboarding-card">
-        <div class="card-logo">
-             <img src="~/images/logo.png" alt="CLEO Logo" />
-        </div>
-        
-        <div class="progress-container">
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: 25%"></div>
-            </div>
-            <p class="progress-text">Step 1 of 4</p>
-        </div>
-
-        <div class="onboarding-content">
-            <h1 class="card-title">Let's get to know you</h1>
-            <p class="card-subtitle">This helps us personalize your tracking experience</p>
-
-            <form method="post" action="/onboarding" class="log-form">
+</head>
+<body>
+    <div class="onboarding-page">
+        <!-- Center Card -->
+        <div class="onboarding-card">
+            
+            <form id="onboardingForm" method="post" action="/onboarding">
                 @Html.AntiForgeryToken()
-                <div class="form-group">
-                    <label class="input-label">How old are you?</label>
-                    <input type="number" name="age" class="input-field" placeholder="Enter your age" required />
+                
+                <!-- STEP 1: AGE GROUP -->
+                <div class="step-container active" id="step-1">
+                    <div class="step-header">
+                        <div class="step-indicator">1 of 3</div>
+                        <div class="lotus-icon">
+                            <img src="~/images/logo2.png" alt="Cleo Logo" style="width: 44px; height: 44px; object-fit: contain;">
+                        </div>
+                    </div>
+                    
+                    <h2 class="step-title">What is your age group ?</h2>
+                    
+                    <div class="radio-options">
+                        <label class="radio-tile">
+                            <input type="radio" name="ageGroup" value="Under 18" required>
+                            <span class="radio-label">Under 18</span>
+                        </label>
+                        <label class="radio-tile">
+                            <input type="radio" name="ageGroup" value="18-25">
+                            <span class="radio-label">18-25</span>
+                        </label>
+                        <label class="radio-tile">
+                            <input type="radio" name="ageGroup" value="26-35">
+                            <span class="radio-label">26-35</span>
+                        </label>
+                        <label class="radio-tile">
+                            <input type="radio" name="ageGroup" value="Above 36">
+                            <span class="radio-label">Above 36</span>
+                        </label>
+                    </div>
+
+                    <div class="step-actions right">
+                        <button type="button" class="btn btn-primary" onclick="nextStep(2)">Continue</button>
+                    </div>
                 </div>
 
-                <div class="onboarding-actions">
-                    <button type="button" class="btn btn-outline account-btn disabled" disabled>Back</button>
-                    <button type="submit" class="btn btn-primary account-btn">Next Step</button>
+                <!-- STEP 2: PREVIOUS PERIOD -->
+                <div class="step-container" id="step-2">
+                    <div class="step-header">
+                        <button type="button" class="back-btn" onclick="prevStep(1)">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                        </button>
+                        <div class="step-indicator">2 of 3</div>
+                        <div class="lotus-icon">
+                            <img src="~/images/logo2.png" alt="Cleo Logo" style="width: 44px; height: 44px; object-fit: contain;">
+                        </div>
+                    </div>
+                    
+                    <h2 class="step-title">Select the first day of your previous period !</h2>
+                    
+                    <div class="input-wrapper">
+                        <input type="date" name="lastPeriodDate" class="step-input" required />
+                    </div>
+
+                    <div class="step-actions split">
+                        <button type="button" class="btn btn-text" onclick="prevStep(1)">Back</button>
+                        <button type="button" class="btn btn-primary" onclick="nextStep(3)">Continue</button>
+                    </div>
                 </div>
+                
+                <!-- STEP 3: CYCLE LENGTH -->
+                <div class="step-container" id="step-3">
+                    <div class="step-header">
+                        <button type="button" class="back-btn" onclick="prevStep(2)">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                        </button>
+                        <div class="step-indicator">3 of 3</div>
+                        <div class="lotus-icon">
+                            <img src="~/images/logo2.png" alt="Cleo Logo" style="width: 44px; height: 44px; object-fit: contain;">
+                        </div>
+                    </div>
+                    
+                    <h2 class="step-title">What is your average cycle length ?</h2>
+                    <p class="step-subtitle">Usually between 21 and 35 days.</p>
+                    
+                    <div class="slider-wrapper">
+                        <div class="slider-value-display">
+                            <span id="cycleLengthValue">28</span> days
+                        </div>
+                        <input type="range" name="cycleLength" id="cycleLength" value="28" min="20" max="45" class="slider-input" oninput="updateSliderValue(this.value)" />
+                        <div class="slider-labels">
+                            <span>20</span>
+                            <span>45</span>
+                        </div>
+                    </div>
+
+                    <div class="step-actions split">
+                        <button type="button" class="btn btn-text" onclick="prevStep(2)">Back</button>
+                        <button type="submit" class="btn btn-primary">Finish</button>
+                    </div>
+                </div>
+
             </form>
         </div>
-
-        <div class="card-footer">
-             <p class="skip-text">You can update this information later in settings</p>
-        </div>
     </div>
-</div>
+
+    <script>
+        function nextStep(step) {
+            // Basic validation
+            let currentStep = step - 1;
+            let isValid = true;
+            
+            if (currentStep === 1) {
+                let checked = document.querySelector('input[name="ageGroup"]:checked');
+                if (!checked) {
+                    alert("Please select your age group.");
+                    return;
+                }
+            } else if (currentStep === 2) {
+                let dateVal = document.querySelector('input[name="lastPeriodDate"]').value;
+                if (!dateVal) {
+                    alert("Please select a date.");
+                    return;
+                }
+            }
+
+            document.querySelectorAll('.step-container').forEach(el => el.classList.remove('active'));
+            document.getElementById('step-' + step).classList.add('active');
+        }
+
+        function prevStep(step) {
+            document.querySelectorAll('.step-container').forEach(el => el.classList.remove('active'));
+            document.getElementById('step-' + step).classList.add('active');
+        }
+
+        function updateSliderValue(val) {
+            document.getElementById('cycleLengthValue').innerText = val;
+        }
+    </script>
+</body>
+</html>

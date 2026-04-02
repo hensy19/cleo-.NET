@@ -136,47 +136,101 @@
 }
 
 .error-message {
-    color: #e53e3e;
-    text-align: center;
-    margin-top: 1rem;
-    font-size: 0.9rem;
+  color: #e53e3e;
+  text-align: center;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+}
+
+/* Button */
+.auth-btn-primary-v3 {
+  background-color: #1A202C;
+  /* Dark grey/black from design */
+  color: var(--white);
+  border: none;
+  padding: 1.1rem;
+  border-radius: 0.75rem;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+  transition: all 0.2s;
+}
+
+.auth-btn-primary-v3:hover {
+  background-color: #2D3748;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+}
+
+.auth-btn-primary-v3 svg {
+  transition: transform 0.2s;
+}
+
+.auth-btn-primary-v3:hover svg {
+  transform: translateX(4px);
+}
+
+/* Footer */
+.auth-footer-v3 {
+  margin-top: 2.5rem;
+  text-align: center;
+}
+
+.auth-footer-v3 p {
+  font-size: 0.95rem;
+  color: #4A5568;
+  font-weight: 600;
+}
+
+.auth-footer-v3 a {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 700;
+  margin-left: 0.5rem;
 }
 
 .auth-status-msg-v3 {
-    margin-top: 1.5rem;
-    padding: 0.75rem;
-    border-radius: 0.5rem;
-    font-size: 0.85rem;
-    font-weight: 600;
-    text-align: center;
+  margin-top: 1.5rem;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
 }
 
 .auth-status-msg-v3.error {
-    background-color: #FED7D7;
-    color: #9B2C2C;
-    border: 1px solid #FEB2B2;
+  background-color: #FED7D7;
+  color: #9B2C2C;
+  border: 1px solid #FEB2B2;
 }
 
 .auth-status-msg-v3.success {
-    background-color: #C6F6D5;
-    color: #22543D;
-    border: 1px solid #9AE6B4;
+  background-color: #C6F6D5;
+  color: #22543D;
+  border: 1px solid #9AE6B4;
 }
 
 /* Ensure the form section is tall enough for the extra fields */
 @media (min-width: 769px) {
-    .auth-container-v3 {
-        min-height: 600px;
-    }
+  .auth-container-v3 {
+    min-height: 600px;
+  }
 }
 
 @media (max-width: 1024px) {
   .signup-wrapper {
     grid-template-columns: 1fr;
   }
+
   .signup-visual {
     display: none;
   }
+
   .signup-container {
     padding: 2rem;
   }
