@@ -148,16 +148,16 @@
   /* Dark grey/black from design */
   color: var(--white);
   border: none;
-  padding: 1.1rem;
-  border-radius: 0.75rem;
-  font-size: 1rem;
+  padding: 0.75rem;
+  border-radius: 0.4rem;
+  font-size: 0.9rem;
   font-weight: 700;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 1rem;
-  margin-top: 1rem;
+  margin-top: 0.5rem;
   transition: all 0.2s;
 }
 
@@ -177,12 +177,12 @@
 
 /* Footer */
 .auth-footer-v3 {
-  margin-top: 2.5rem;
+  margin-top: 1rem;
   text-align: center;
 }
 
 .auth-footer-v3 p {
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   color: #4A5568;
   font-weight: 600;
 }
@@ -215,10 +215,10 @@
   border: 1px solid #9AE6B4;
 }
 
-/* Ensure the form section is tall enough for the extra fields */
+/* Removed hardcoded min-height for flexible form section */
 @media (min-width: 769px) {
   .auth-container-v3 {
-    min-height: 600px;
+    height: auto;
   }
 }
 

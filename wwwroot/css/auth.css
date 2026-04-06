@@ -2,7 +2,7 @@
     display: flex;
     align-items: center;
     text-align: center;
-    margin: 24px 0;
+    margin: 12px 0;
     color: #94a3b8;
     font-size: 0.875rem;
 }
@@ -22,15 +22,15 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 12px;
+    gap: 8px;
     width: 100%;
-    padding: 12px;
+    padding: 10px;
     background-color: white;
     border: 1px solid #e2e8f0;
-    border-radius: 12px;
+    border-radius: 8px;
     color: #1e293b;
     font-weight: 600;
-    font-size: 0.95rem;
+    font-size: 0.85rem;
     text-decoration: none;
     transition: all 0.2s ease;
     cursor: pointer;
