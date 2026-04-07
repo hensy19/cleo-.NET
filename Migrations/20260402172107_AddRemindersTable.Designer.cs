@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using cleo.Data;
 
@@ -10,9 +11,11 @@ using cleo.Data;
 namespace cleo.Migrations
 {
     [DbContext(typeof(CleoDbContext))]
-    partial class CleoDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260402172107_AddRemindersTable")]
+    partial class AddRemindersTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.25");
@@ -51,7 +54,7 @@ namespace cleo.Migrations
                             Id = 1,
                             Email = "admin@cleo.app",
                             IsSuperAdmin = true,
-                            LastActive = new DateTime(2026, 4, 6, 13, 47, 55, 333, DateTimeKind.Utc).AddTicks(5872),
+                            LastActive = new DateTime(2026, 4, 2, 17, 21, 6, 944, DateTimeKind.Utc).AddTicks(92),
                             Name = "Admin",
                             Password = "password123"
                         },
@@ -60,7 +63,7 @@ namespace cleo.Migrations
                             Id = 2,
                             Email = "ava@cleo.app",
                             IsSuperAdmin = true,
-                            LastActive = new DateTime(2026, 4, 6, 13, 47, 55, 333, DateTimeKind.Utc).AddTicks(5877),
+                            LastActive = new DateTime(2026, 4, 2, 17, 21, 6, 944, DateTimeKind.Utc).AddTicks(98),
                             Name = "Ava",
                             Password = "password123"
                         },
@@ -69,7 +72,7 @@ namespace cleo.Migrations
                             Id = 3,
                             Email = "hensy@cleo.app",
                             IsSuperAdmin = true,
-                            LastActive = new DateTime(2026, 4, 6, 13, 47, 55, 333, DateTimeKind.Utc).AddTicks(5879),
+                            LastActive = new DateTime(2026, 4, 2, 17, 21, 6, 944, DateTimeKind.Utc).AddTicks(100),
                             Name = "Hensy",
                             Password = "password123"
                         });
@@ -113,7 +116,7 @@ namespace cleo.Migrations
                             Id = 1,
                             Category = "Nutrition",
                             Content = "Detailed analysis...",
-                            PublishDate = new DateTime(2026, 4, 6, 13, 47, 55, 333, DateTimeKind.Utc).AddTicks(5976),
+                            PublishDate = new DateTime(2026, 4, 2, 17, 21, 6, 944, DateTimeKind.Utc).AddTicks(205),
                             Status = "Published",
                             Title = "Focus on Iron-Rich Foods",
                             Views = 1240
@@ -123,7 +126,7 @@ namespace cleo.Migrations
                             Id = 2,
                             Category = "Exercise",
                             Content = "Detailed analysis...",
-                            PublishDate = new DateTime(2026, 4, 6, 13, 47, 55, 333, DateTimeKind.Utc).AddTicks(5979),
+                            PublishDate = new DateTime(2026, 4, 2, 17, 21, 6, 944, DateTimeKind.Utc).AddTicks(209),
                             Status = "Published",
                             Title = "Yoga for Cramp Relief",
                             Views = 952
@@ -133,7 +136,7 @@ namespace cleo.Migrations
                             Id = 3,
                             Category = "Science",
                             Content = "Detailed analysis...",
-                            PublishDate = new DateTime(2026, 4, 6, 13, 47, 55, 333, DateTimeKind.Utc).AddTicks(5980),
+                            PublishDate = new DateTime(2026, 4, 2, 17, 21, 6, 944, DateTimeKind.Utc).AddTicks(211),
                             Status = "Published",
                             Title = "Understanding LH Surge",
                             Views = 1520
@@ -143,7 +146,7 @@ namespace cleo.Migrations
                             Id = 4,
                             Category = "Health",
                             Content = "Detailed analysis...",
-                            PublishDate = new DateTime(2026, 4, 6, 13, 47, 55, 333, DateTimeKind.Utc).AddTicks(5982),
+                            PublishDate = new DateTime(2026, 4, 2, 17, 21, 6, 944, DateTimeKind.Utc).AddTicks(212),
                             Status = "Published",
                             Title = "Managing PMS Bloating",
                             Views = 840
@@ -204,12 +207,6 @@ namespace cleo.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsEmailSent")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsEnabled")
                         .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsRead")
@@ -285,9 +282,6 @@ namespace cleo.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("JoinDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("LastActivityDate")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")

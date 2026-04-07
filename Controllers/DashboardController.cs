@@ -12,11 +12,15 @@ public class DashboardController : Controller
 {
     private readonly CleoDbContext _db;
     private readonly IAIService _aiService;
+    private readonly ICyclePredictionService _predictionService;
+    private readonly IReminderService _reminderService;
 
-    public DashboardController(CleoDbContext db, IAIService aiService)
+    public DashboardController(CleoDbContext db, IAIService aiService, ICyclePredictionService predictionService, IReminderService reminderService)
     {
         _db = db;
         _aiService = aiService;
+        _predictionService = predictionService;
+        _reminderService = reminderService;
     }
 
     [HttpGet]
@@ -41,19 +45,57 @@ public class DashboardController : Controller
             return RedirectToAction("Onboarding", "Public");
         }
 
-        if (lastCycle != null)
+        if (lastCycle != null && user != null)
         {
-            var diff = (DateTime.UtcNow - lastCycle.StartDate).Days + 1;
-            ViewBag.CycleDay = diff > 0 && diff <= user.CycleLength ? diff : 1;
+            // === EXTERNAL CYCLE PREDICTION LOGIC EXPORTED TO DASHBOARD UI === //
             
-            var nextDate = lastCycle.StartDate.AddDays(user.CycleLength);
+            // 1. Current Cycle Day
+            int currentDay = _predictionService.GetCurrentCycleDay(lastCycle.StartDate);
+            ViewBag.CycleDay = currentDay <= user.CycleLength ? currentDay : 1;
+            
+            // 2. Next Period Calculation
+            var nextDate = _predictionService.GetNextPeriodDate(lastCycle.StartDate, user.CycleLength);
             ViewBag.NextPeriodDate = nextDate.ToString("MMM dd, yyyy");
-            ViewBag.DaysUntilNextPeriod = (nextDate - DateTime.UtcNow).Days;
+            ViewBag.DaysUntilNextPeriod = _predictionService.GetDaysLeft(nextDate);
             
-            // Typical ovulation is ~14 days before next period
-            var ovulationDate = nextDate.AddDays(-14);
+            // 3. Ovulation Tracking
+            var ovulationDate = _predictionService.GetOvulationDate(lastCycle.StartDate, user.CycleLength);
             ViewBag.OvulationDay = ovulationDate.ToString("MMM dd, yyyy");
-            ViewBag.OvulationDaysUntil = (ovulationDate - DateTime.UtcNow).Days;
+            ViewBag.OvulationDaysUntil = _predictionService.GetDaysLeft(ovulationDate);
+
+            // 4. Fertile Window
+            var fertileWindow = _predictionService.GetFertileWindow(lastCycle.StartDate, user.CycleLength);
+            ViewBag.FertileWindowStart = fertileWindow.Start.ToString("MMM dd");
+            ViewBag.FertileWindowEnd = fertileWindow.End.ToString("MMM dd");
+            ViewBag.FertileWindowRange = $"{ViewBag.FertileWindowStart} - {ViewBag.FertileWindowEnd}";
+
+            // === AUTO-GENERATE REMINDERS === //
+            await _reminderService.CheckAndGenerateRemindersAsync(userId);
+
+            // === CALENDAR DATA PREPARATION === //
+            var today = DateTime.UtcNow.Date;
+            var startOfMonth = new DateTime(today.Year, today.Month, 1);
+            var endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
+            
+            var calendarDays = new List<object>();
+            for (var date = startOfMonth; date <= endOfMonth; date = date.AddDays(1))
+            {
+                string type = "none";
+                if (date == today) type = "today";
+                
+                // Determine if date falls into period, fertile, or ovulation
+                // For simplicity, we predict the next period based on lastCycle
+                var nextPeriodStart = _predictionService.GetNextPeriodDate(lastCycle.StartDate, user.CycleLength).Date;
+                var nextPeriodEnd = nextPeriodStart.AddDays(user.PeriodLength - 1).Date;
+                
+                if (date >= nextPeriodStart && date <= nextPeriodEnd) type = "period";
+                else if (date == ovulationDate.Date) type = "ovulation";
+                else if (date >= fertileWindow.Start.Date && date <= fertileWindow.End.Date) type = "fertile";
+
+                calendarDays.Add(new { Day = date.Day, Type = type, FullDate = date });
+            }
+            ViewBag.CalendarDays = calendarDays;
+            ViewBag.MonthTitle = today.ToString("MMMM yyyy");
         }
         else
         {
@@ -72,6 +114,13 @@ public class DashboardController : Controller
         var lastMood = await _db.MoodNotes.Where(m => m.UserId == userId).OrderByDescending(m => m.Date).FirstOrDefaultAsync();
         ViewBag.Mood = lastMood?.Mood ?? "Not set";
         ViewBag.Notes = await _db.MoodNotes.Where(m => m.UserId == userId).OrderByDescending(m => m.Date).Take(3).Select(n => n.Note).ToListAsync();
+
+        // Upcoming Reminders
+        ViewBag.UpcomingReminders = await _db.Reminders
+            .Where(r => r.UserId == userId && r.ReminderDate >= DateTime.UtcNow.Date)
+            .OrderBy(r => r.ReminderDate)
+            .Take(3)
+            .ToListAsync();
 
         return View("~/Views/Dashboard/Index.cshtml");
     }
@@ -99,6 +148,7 @@ public class DashboardController : Controller
             DateTime? end = DateTime.TryParse(endDate, out var e) ? e : null;
             _db.CycleTracks.Add(new CycleTrack { UserId = userId.Value, StartDate = start, EndDate = end });
             await _db.SaveChangesAsync();
+            await _reminderService.UpdateLastActivityAsync(userId.Value);
             TempData["PeriodMessage"] = "Period cycle logged successfully!";
         }
         
@@ -135,6 +185,7 @@ public class DashboardController : Controller
             AITip = tip
         });
         await _db.SaveChangesAsync();
+        await _reminderService.UpdateLastActivityAsync(userId.Value);
 
         TempData["SymptomsMessage"] = "Symptoms logged to your profile!";
         TempData["AITip"] = tip;
@@ -220,6 +271,7 @@ public class DashboardController : Controller
                 AITip = tip
             });
             await _db.SaveChangesAsync();
+            await _reminderService.UpdateLastActivityAsync(userId.Value);
             TempData["AITip"] = tip;
         }
         return RedirectToAction(nameof(Mood));

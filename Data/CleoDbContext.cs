@@ -16,6 +16,7 @@ public class CleoDbContext : DbContext
     public DbSet<CycleTrack> CycleTracks { get; set; } = null!;
     public DbSet<MoodNote> MoodNotes { get; set; } = null!;
     public DbSet<SymptomLog> SymptomLogs { get; set; } = null!;
+    public DbSet<Reminder> Reminders { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

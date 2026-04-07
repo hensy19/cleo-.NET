@@ -120,6 +120,7 @@
         </div>
 
         <div class="right-column">
+
             <!-- Recent Notes -->
             <div class="section-card notes-widget">
                 <h3>Recent Notes</h3>
@@ -152,11 +153,116 @@
             </div>
 
             <!-- Reminders -->
-            <div class="section-card reminders-card">
-                <h3>Reminders</h3>
-                <p class="reminder-text">Get notified before your period starts</p>
-                <button class="btn-reminders">Manage Reminders</button>
+            <div class="section-card reminders-timeline-card">
+                <div class="section-header-row">
+                    <h3>Upcoming Reminders</h3>
+                    <div class="notification-toggle-wrapper">
+                        <span class="toggle-label">Push Alerts</span>
+                        <label class="switch-v2">
+                            <input type="checkbox" id="notificationToggle">
+                            <span class="slider-v2 round"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="timeline-v2">
+                    @if (ViewBag.UpcomingReminders != null && ((List<cleo.Models.Reminder>)ViewBag.UpcomingReminders).Any())
+                    {
+                        foreach (var reminder in (List<cleo.Models.Reminder>)ViewBag.UpcomingReminders)
+                        {
+                            var daysLeft = (reminder.ReminderDate.Date - DateTime.UtcNow.Date).Days;
+                            string timeLabel = daysLeft switch
+                            {
+                                0 => "Today",
+                                1 => "Tomorrow",
+                                _ => $"In {daysLeft} days"
+                            };
+
+                            <div class="timeline-item-v2 @reminder.Type.ToLower()">
+                                <div class="timeline-marker"></div>
+                                <div class="timeline-content">
+                                    <span class="timeline-time">@timeLabel</span>
+                                    <p class="timeline-title">@reminder.Title</p>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="no-reminders">No upcoming reminders</p>
+                    }
+                </div>
+                <div class="center-btn">
+                    <a asp-action="Manage" asp-controller="Reminders" class="btn-reminders-v2">Manage Reminders</a>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggle = document.getElementById('notificationToggle');
+            const REMINDER_SENT_KEY = 'cleo_reminders_sent_today';
+            
+            // 1. Initialize Toggle State from localStorage
+            const isEnabled = localStorage.getItem('cleo_notifications_enabled') === 'true';
+            toggle.checked = isEnabled;
+            
+            // 2. Handle Toggle Change
+            toggle.addEventListener('change', function() {
+                localStorage.setItem('cleo_notifications_enabled', toggle.checked);
+                if (toggle.checked) {
+                    requestNotificationPermission();
+                }
+            });
+
+            function requestNotificationPermission() {
+                if (!("Notification" in window)) {
+                    console.log("This browser does not support desktop notification");
+                    return;
+                }
+                
+                if (Notification.permission !== "granted") {
+                    Notification.requestPermission();
+                }
+            }
+
+            // 3. Smart Notification Logic
+            const checkAndTriggerNotifications = () => {
+                if (Notification.permission !== "granted" || !toggle.checked) return;
+
+                // We inject the reminders from ViewBag into a JS array
+                const upcomingReminders = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.UpcomingReminders));
+                const today = new Date().toISOString().split('T')[0];
+                const sentReminders = JSON.parse(localStorage.getItem(REMINDER_SENT_KEY) || '{}');
+
+                // If it's a new day, clear the sent cache
+                if (sentReminders.date !== today) {
+                    sentReminders.date = today;
+                    sentReminders.ids = [];
+                }
+
+                upcomingReminders.forEach(reminder => {
+                    const reminderDateStr = new Date(reminder.ReminderDate).toISOString().split('T')[0];
+                    
+                    // Trigger if it's due today and hasn't been sent yet
+                    if (reminderDateStr === today && !sentReminders.ids.includes(reminder.Id)) {
+                        new Notification("Cleo Reminder", {
+                            body: reminder.Title,
+                            icon: "/images/logo2.png" // Using the premium logo
+                        });
+                        sentReminders.ids.push(reminder.Id);
+                    }
+                });
+
+                localStorage.setItem(REMINDER_SENT_KEY, JSON.stringify(sentReminders));
+            };
+
+            // Run check on load
+            if (isEnabled) {
+                checkAndTriggerNotifications();
+            }
+        });
+    </script>
+}

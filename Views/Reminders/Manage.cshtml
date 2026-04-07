@@ -1,0 +1,248 @@
+@model List<cleo.Models.Reminder>
+@{
+    ViewData["Title"] = "Manage Reminders";
+    Layout = "_DashboardLayout";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/Dashboard.css" />
+    <style>
+        .reminder-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .manage-reminders-card {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 2rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+        }
+        .add-reminder-form {
+            background: #F8FAFC;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid #E2E8F0;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 1rem;
+            align-items: end;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            font-size: 0.85rem;
+        }
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #CBD5E0;
+            border-radius: 0.5rem;
+            font-size: 0.9rem;
+        }
+        .btn-add {
+            background: var(--primary-color);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-add:hover { background: #0A3A5E; transform: translateY(-1px); }
+
+        .reminder-list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            border-bottom: 1px solid #EDF2F7;
+            transition: all 0.2s;
+        }
+        .reminder-list-item:last-child { border-bottom: none; }
+        .reminder-list-item:hover { background-color: #F8FAFC; }
+        .reminder-list-item.disabled { opacity: 0.6; }
+
+        .reminder-info h4 { margin: 0; color: var(--primary-color); font-size: 1.15rem; }
+        .reminder-meta { display: flex; gap: 1rem; margin-top: 0.5rem; align-items: center; }
+        .date-badge { font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.25rem; }
+        
+        .toggle-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #CBD5E0;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px; width: 14px;
+            left: 3px; bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: #48BB78; }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        .action-group { display: flex; gap: 0.75rem; align-items: center; }
+        .btn-icon { background: none; border: none; cursor: pointer; color: var(--text-muted); transition: color 0.2s; font-size: 1.1rem; }
+        .btn-icon:hover { color: #F56565; }
+        .edit-date-form { display: none; margin-top: 0.5rem; }
+
+        .badge-system { background: #EBF8FF; color: #2B6CB0; padding: 0.25rem 0.6rem; border-radius: 1rem; font-size: 0.75rem; font-weight: 700; }
+        .msg-success { background: #C6F6D5; color: #22543D; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; font-size: 0.9rem; }
+    </style>
+}
+
+<div class="dashboard-v2">
+    <div class="reminder-container">
+        <div class="welcome-header">
+            <h1>Manage Reminders</h1>
+            <p>Customize your notifications and stay connected with your body.</p>
+        </div>
+
+        @if (TempData["ReminderMsg"] != null)
+        {
+            <div class="msg-success">
+                @TempData["ReminderMsg"]
+            </div>
+        }
+
+        <!-- Add Reminder Section -->
+        <div class="add-reminder-form">
+            <h3 style="margin-top:0; margin-bottom: 1rem; color: var(--primary-color);">Create New Reminder</h3>
+            <form asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Title</label>
+                        <input type="text" name="title" class="form-input" placeholder="e.g. Start taking vitamins" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" name="date" class="form-input" required value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <div class="form-group">
+                        <label>Type</label>
+                        <select name="type" class="form-input">
+                            <option value="Custom">Custom</option>
+                            <option value="Period">Period</option>
+                            <option value="Health">Health</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-add">Add</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Reminders List -->
+        <div class="manage-reminders-card">
+            @if (Model != null && Model.Any())
+            {
+                <div class="reminder-list">
+                    @foreach (var reminder in Model)
+                    {
+                        <div class="reminder-list-item @(reminder.IsEnabled ? "" : "disabled")">
+                            <div class="reminder-info">
+                                <h4>@reminder.Title</h4>
+                                <div class="reminder-meta">
+                                    <span class="date-badge">📅 @reminder.ReminderDate.ToString("MMM dd, yyyy")</span>
+                                    <span class="badge-system">@reminder.Type</span>
+                                    @if (reminder.IsEmailSent)
+                                    {
+                                        <span style="font-size: 0.75rem; color: #48BB78; display: flex; align-items: center; gap: 0.25rem;">
+                                            <span style="font-size: 1rem;">✓</span> Email Sent
+                                        </span>
+                                    }
+                                </div>
+                                
+                                <!-- Hidden Edit Form -->
+                                <form id="edit-@reminder.Id" asp-action="UpdateDate" method="post" class="edit-date-form">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@reminder.Id" />
+                                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                        <input type="date" name="newDate" class="form-input" style="width: auto; padding: 0.4rem;" value="@reminder.ReminderDate.ToString("yyyy-MM-dd")" />
+                                        <button type="submit" class="btn-add" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">Save</button>
+                                        <button type="button" onclick="toggleEdit('@reminder.Id')" class="btn-text" style="font-size: 0.8rem;">Cancel</button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <div class="action-group">
+                                <!-- Toggle -->
+                                <form asp-action="Toggle" asp-route-id="@reminder.Id" method="post" id="toggle-form-@reminder.Id">
+                                    @Html.AntiForgeryToken()
+                                    <label class="switch">
+                                        <input type="checkbox" @(reminder.IsEnabled ? "checked" : "") onchange="document.getElementById('toggle-form-@reminder.Id').submit()">
+                                        <span class="slider"></span>
+                                    </label>
+                                </form>
+
+                                <!-- Edit Button Trigger -->
+                                <button type="button" class="btn-icon" onclick="toggleEdit('@reminder.Id')" title="Edit Date">
+                                    ✏️
+                                </button>
+
+                                <!-- Delete -->
+                                <form asp-action="Delete" asp-route-id="@reminder.Id" method="post" onsubmit="return confirm('Remove @reminder.Title?');">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn-icon" title="Delete">
+                                        🗑️
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="no-data-msg" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                    <p>You have no active reminders at the moment.</p>
+                </div>
+            }
+        </div>
+        
+        <div class="center-btn" style="margin-top: 1rem;">
+            <a href="/dashboard" class="btn-text">← Back to Dashboard</a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function toggleEdit(id) {
+            const form = document.getElementById('edit-' + id);
+            if (form.style.display === 'block') {
+                form.style.display = 'none';
+            } else {
+                form.style.display = 'block';
+            }
+        }
+    </script>
+}
